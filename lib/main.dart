@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shopping_list/screens/home.dart';
+import 'package:shopping_list/widgets/home.dart';
 
 void main() {
   runApp(const MyApp());
