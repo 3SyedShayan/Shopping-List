@@ -3,22 +3,22 @@ import 'package:shopping_list/data/categories.dart';
 import 'package:shopping_list/data/dummy_data.dart';
 import 'package:shopping_list/widgets/new_item.dart';
 
-class Home extends StatefulWidget {
-  const Home({super.key});
+class GroceryList extends StatefulWidget {
+  const GroceryList({super.key});
 
   @override
-  State<Home> createState() => _HomeState();
+  State<GroceryList> createState() => _GroceryListState();
 }
 
-class _HomeState extends State<Home> {
+class _GroceryListState extends State<GroceryList> {
   void _onNewItem() {
-
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => NewItem(),
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
