@@ -17,12 +17,13 @@ class _NewItemState extends State<NewItem> {
   int _enteredQuantity = 1;
   String _enteredName = "";
   var _selectedCategory = categories[Categories.vegetables]!;
+  bool isLoading = false;
   var _formKey = GlobalKey<FormState>();
   void _submitForm() async {
     print("Executed");
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-
+      isLoading = true;
       final url = Uri.https(
           'udemylearn-7cce0-default-rtdb.asia-southeast1.firebasedatabase.app',
           'grocery_items.json');
@@ -44,8 +45,16 @@ class _NewItemState extends State<NewItem> {
       if (!context.mounted) {
         return;
       }
+      final Map<String, dynamic> resData = json.decode(response.body);
 
-      Navigator.of(context).pop();
+      Navigator.of(context).pop(
+        GroceryItem(
+          id: resData['name'],
+          name: _enteredName,
+          quantity: _enteredQuantity,
+          category: _selectedCategory,
+        ),
+      );
     }
   }
 
@@ -145,14 +154,22 @@ class _NewItemState extends State<NewItem> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () {
-                      _formKey.currentState!.reset();
-                    },
+                    onPressed: isLoading
+                        ? null
+                        : () {
+                            _formKey.currentState!.reset();
+                          },
                     child: Text("Reset"),
                   ),
                   ElevatedButton(
-                    onPressed: _submitForm,
-                    child: Text("Submit"),
+                    onPressed: isLoading ? null : _submitForm,
+                    child: isLoading
+                        ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(),
+                          )
+                        : Text("Submit"),
                   )
                 ],
               )
