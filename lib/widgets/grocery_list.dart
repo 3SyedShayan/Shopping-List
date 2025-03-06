@@ -170,6 +170,12 @@ class _GroceryListState extends State<GroceryList> {
       });
     }
 
+    if (response.body == 'null') {
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
     final Map<String, dynamic> extractedData = json.decode(response.body);
     final List<GroceryItem> loadedItems = [];
     for (final data in extractedData.entries) {
@@ -203,8 +209,8 @@ class _GroceryListState extends State<GroceryList> {
     print(response.statusCode);
     print(response.body);
     if (response.statusCode >= 400) {
-      _groceryItems.insert(itemIndex, item);
       setState(() {
+        _groceryItems.insert(itemIndex, item);
         _error = 'An error occurred!';
       });
     }
