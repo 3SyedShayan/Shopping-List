@@ -25,7 +25,7 @@ class _NewItemState extends State<NewItem> {
       _formKey.currentState!.save();
       isLoading = true;
       final url = Uri.https(
-          'udemylearn-7cce0-default-rtdb.asia-southeast1.firebasedatabase.app',
+          'shopcart-6ea1e-default-rtdb.asia-southeast1.firebasedatabase.app',
           'grocery_items.json');
       final response = await http.post(
         url,

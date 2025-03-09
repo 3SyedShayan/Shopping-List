@@ -17,15 +17,11 @@ class _GroceryListState extends State<GroceryList> {
   var isLoading = true;
   String? _error;
   void _loadItems() async {
-    // final url = Uri.https(
-    //     'udemylearn-7cce0-default-rtdb.asia-southeast1.firebasedatabase.app',
-    //     'grocery_items.json');
     final url = Uri.https(
-        'udemylearn-7cce0-default-rtdb.asia-southeast1.firebasedatabase.app',
-        'grocery_items.json');
+      'shopcart-6ea1e-default-rtdb.asia-southeast1.firebasedatabase.app',
+      'grocery_items.json',
+    );
     final response = await http.get(url);
-    print(response.statusCode);
-    print(response.body);
 
     try {
       if (response.body == 'null') {
@@ -154,7 +150,15 @@ class _GroceryListState extends State<GroceryList> {
           ),
         ],
       ),
-      body: content,
+      body: RefreshIndicator(
+        child: content,
+        onRefresh: () async {
+          await Future.delayed(
+            Duration(seconds: 5),
+          );
+          _loadItems();
+        },
+      ),
     );
   }
 }
