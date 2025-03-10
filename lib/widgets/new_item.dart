@@ -20,9 +20,13 @@ class _NewItemState extends State<NewItem> {
   bool isLoading = false;
   var _formKey = GlobalKey<FormState>();
   void _submitForm() async {
-    print("Executed");
+    print("Reached Submit Form");
     if (_formKey.currentState!.validate()) {
+      print("Passed Validate");
+
       _formKey.currentState!.save();
+      print("Passed Saved");
+
       isLoading = true;
       final url = Uri.https(
           'shopcart-6ea1e-default-rtdb.asia-southeast1.firebasedatabase.app',
@@ -38,7 +42,7 @@ class _NewItemState extends State<NewItem> {
           'category': _selectedCategory.name,
         }),
       );
-      print("After Save");
+      print("HTTP Req Successful");
       print(response.body);
       print(response.statusCode);
 

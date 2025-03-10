@@ -13,48 +13,45 @@ class GroceryList extends StatefulWidget {
 }
 
 class _GroceryListState extends State<GroceryList> {
+  late Future<List<GroceryItem>> loadedItems;
   List<GroceryItem> _groceryItems = [];
   var isLoading = true;
-  String? _error;
-  void _loadItems() async {
+  Future<List<GroceryItem>> _loadItems() async {
     final url = Uri.https(
       'shopcart-6ea1e-default-rtdb.asia-southeast1.firebasedatabase.app',
       'grocery_items.json',
     );
     final response = await http.get(url);
 
-    try {
-      if (response.body == 'null') {
-        setState(() {
-          isLoading = false;
-        });
-        return;
-      }
-      final Map<String, dynamic> extractedData = json.decode(response.body);
-      final List<GroceryItem> loadedItems = [];
-      for (final data in extractedData.entries) {
-        final category = categories.entries
-            .firstWhere((e) => e.value.name == data.value['category'])
-            .value;
-        loadedItems.add(
-          GroceryItem(
-            id: data.key,
-            name: data.value['name'],
-            quantity: data.value['quantity'],
-            category: category,
-          ),
-        );
-      }
-
-      setState(() {
-        _groceryItems = loadedItems;
-        isLoading = false;
-      });
-    } catch (err) {
-      setState(() {
-        _error = 'An error occurred!';
-      });
+    if (response.statusCode >= 400) {
+      throw Exception('Failed to fetch grocery items, Please Try Again');
     }
+    if (response.body == 'null') {
+      return [];
+    }
+    // if (response.body == 'null') {
+    //   setState(() {
+    //     isLoading = false;
+    //   });
+    //   return;
+    // }
+    final Map<String, dynamic> extractedData = json.decode(response.body);
+    final List<GroceryItem> loadedItems = [];
+    for (final data in extractedData.entries) {
+      final category = categories.entries
+          .firstWhere((e) => e.value.name == data.value['category'])
+          .value;
+      loadedItems.add(
+        GroceryItem(
+          id: data.key,
+          name: data.value['name'],
+          quantity: data.value['quantity'],
+          category: category,
+        ),
+      );
+    }
+    print(loadedItems.length);
+    return loadedItems;
 
     // if (response.statusCode >= 400) {
     //   setState(() {
@@ -69,7 +66,7 @@ class _GroceryListState extends State<GroceryList> {
       _groceryItems.remove(item);
     });
     final url = Uri.https(
-        'udemylearn-7cce0-default-rtdb.asia-southeast1.firebasedatabase.app',
+        'shopcart-6ea1e-default-rtdb.asia-southeast1.firebasedatabase.app',
         'grocery_items/${item.id}.json');
     final response = await http.delete(url);
     print(response.statusCode);
@@ -77,7 +74,6 @@ class _GroceryListState extends State<GroceryList> {
     if (response.statusCode >= 400) {
       setState(() {
         _groceryItems.insert(itemIndex, item);
-        _error = 'An error occurred!';
       });
     }
   }
@@ -85,7 +81,7 @@ class _GroceryListState extends State<GroceryList> {
   @override
   void initState() {
     super.initState();
-    _loadItems();
+    loadedItems = _loadItems();
   }
 
   void _onNewItem() async {
@@ -100,45 +96,11 @@ class _GroceryListState extends State<GroceryList> {
 
   @override
   Widget build(BuildContext context) {
-    Widget content = Center(
-      child: Text(
-        "No Items to Display, \n Please Add an Item.",
-      ),
-    );
-    if (_error != null) {
-      content = Center(
-        child: Text(_error!),
-      );
-    }
-    if (isLoading) {
-      content = Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-    if (_groceryItems.isNotEmpty) {
-      content = ListView.builder(
-        itemCount: _groceryItems.length,
-        itemBuilder: (context, index) => Dismissible(
-          key: Key(_groceryItems[index].id),
-          onDismissed: (direction) {
-            _removeItem(
-              _groceryItems[index],
-            );
-          },
-          child: ListTile(
-            title: Text(_groceryItems[index].name),
-            leading: Container(
-              width: 25,
-              height: 25,
-              color: _groceryItems[index].category.color,
-            ),
-            trailing: Text(
-              _groceryItems[index].quantity.toString(),
-            ),
-          ),
-        ),
-      );
-    }
+    // if (_error != null) {
+    //   content = Center(
+    //     child: Text(_error!),
+    //   );
+    // }
 
     return Scaffold(
       appBar: AppBar(
@@ -151,7 +113,48 @@ class _GroceryListState extends State<GroceryList> {
         ],
       ),
       body: RefreshIndicator(
-        child: content,
+        child: FutureBuilder(
+            future: _loadItems(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(
+                  child: Text(snapshot.error.toString()),
+                );
+              }
+
+              if (snapshot.data!.isEmpty) {
+                return Center(
+                  child: Text("No Items Added"),
+                );
+              }
+
+              return ListView.builder(
+                itemCount: snapshot.data!.length,
+                itemBuilder: (context, index) => Dismissible(
+                  key: ValueKey(snapshot.data![index].id),
+                  onDismissed: (direction) {
+                    _removeItem(
+                      snapshot.data![index],
+                    );
+                  },
+                  child: ListTile(
+                    title: Text(snapshot.data![index].name),
+                    leading: Container(
+                      width: 25,
+                      height: 25,
+                      color: snapshot.data![index].category.color,
+                    ),
+                    trailing: Text(
+                      snapshot.data![index].quantity.toString(),
+                    ),
+                  ),
+                ),
+              );
+            }),
+        // content,
         onRefresh: () async {
           await Future.delayed(
             Duration(seconds: 5),
